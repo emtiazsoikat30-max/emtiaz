@@ -107,7 +107,7 @@
     .profile-photo { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 53% 31%; opacity: 0; transition: opacity .65s ease; }
     .profile-card.particle-ready .profile-photo { opacity: 1; }
     .particle-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    @media (prefers-reduced-motion: reduce) { .profile-photo { opacity: 1; }.particle-canvas { display: none; } }
+    @media (prefers-reduced-motion: reduce), (max-width: 700px) { .profile-photo { opacity: 1; }.particle-canvas { display: none; } }
     .profile-caption { width: min(100%, 408px); padding: 18px 21px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 25px rgba(30,37,73,.08); }
     .profile-caption strong { display: block; font-family: var(--display); font-size: 1.55rem; line-height: 1; letter-spacing: -.06em; }.profile-caption span { display: block; margin-top: 6px; color: var(--violet); font-family: var(--display); font-size: .75rem; font-weight: 800; }.profile-caption p { max-width: none; margin: 12px 0 0; color: #bdb8ca; font-size: .78rem; line-height: 1.72; }
 
@@ -184,7 +184,7 @@
         </div>
         <div class="hero-visual" aria-label="Emtiaz Soikat marketing profile">
           <div class="profile-card">
-            <img class="profile-photo" src="assets/emtiaz-soikat-profile.png" alt="Emtiaz Soikat, Digital Marketing Expert" width="1254" height="1254" fetchpriority="high" decoding="async">
+            <img class="profile-photo" src="assets/emtiaz-soikat-profile-900.jpg" alt="Emtiaz Soikat, Digital Marketing Expert" width="900" height="900" fetchpriority="high" decoding="async">
             <canvas class="particle-canvas" aria-hidden="true"></canvas>
           </div>
           <div class="profile-caption"><strong>Emtiaz Soikat</strong><span>Digital Marketing &amp; Growth Strategy</span><p>I create simple, focused marketing plans around your audience, offer and business goals.</p></div>
@@ -223,7 +223,7 @@
       var card = document.querySelector('.profile-card');
       var image = card && card.querySelector('.profile-photo');
       var canvas = card && card.querySelector('.particle-canvas');
-      if (!card || !image || !canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (!card || !image || !canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(max-width: 700px)').matches) {
         if (card) card.classList.add('particle-ready');
         return;
       }
