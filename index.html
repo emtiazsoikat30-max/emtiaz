@@ -302,14 +302,32 @@
       else image.addEventListener('load', animatePortrait, { once: true });
     }());
     var contactForm = document.getElementById('contactForm');
-    if (contactForm) contactForm.addEventListener('submit', function (event) {
+    var supabaseUrl = 'https://hwaeofmegakfznwbgjkk.supabase.co';
+    var supabasePublishableKey = 'sb_publishable_F9WzASjO5wr0mTC180J5CQ_RYA8_Rvn';
+    if (contactForm) contactForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       const note = document.getElementById('formNote');
       const name = document.getElementById('clientName').value.trim();
       const email = document.getElementById('clientEmail').value.trim();
       const message = document.getElementById('clientMessage').value.trim();
       const text = `আসসালামু আলাইকুম Emtiaz Soikat,\n\nনাম: ${name}\nইমেইল: ${email}\nপ্রজেক্ট: ${message}`;
-      note.textContent = 'WhatsApp খুলছে…';
+      note.textContent = 'Saving your message…';
+      try {
+        const response = await fetch(`${supabaseUrl}/rest/v1/contact_leads`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabasePublishableKey,
+            'Authorization': `Bearer ${supabasePublishableKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ name, email, message })
+        });
+        if (!response.ok) throw new Error('Lead save failed');
+        note.textContent = 'Message saved. Opening WhatsApp…';
+      } catch (error) {
+        note.textContent = 'Opening WhatsApp…';
+      }
       window.open(`https://wa.me/8801868589120?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     });
   </script>
