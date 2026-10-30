@@ -228,46 +228,57 @@
         canvas.width = width * ratio;
         canvas.height = height * ratio;
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        var sampler = document.createElement('canvas');
-        sampler.width = width;
-        sampler.height = height;
-        var sampleCtx = sampler.getContext('2d');
-        sampleCtx.drawImage(image, 0, 0, width, height);
-        var pixels;
-        try { pixels = sampleCtx.getImageData(0, 0, width, height).data; }
-        catch (error) { card.classList.add('particle-ready'); return; }
-        var dots = [];
-        var spacing = Math.max(9, Math.round(Math.sqrt((width * height) / 1000)));
-        for (var y = 4; y < height; y += spacing) {
-          for (var x = 4; x < width; x += spacing) {
-            var index = (y * width + x) * 4;
-            if (pixels[index + 3] < 70) continue;
-            dots.push({
-              x: width / 2 + (Math.random() - .5) * width * 1.7,
-              y: height / 2 + (Math.random() - .5) * height * 1.45,
-              targetX: x,
-              targetY: y,
-              color: 'rgb(' + pixels[index] + ',' + pixels[index + 1] + ',' + pixels[index + 2] + ')',
-              radius: .65 + Math.random() * 1.35,
-              delay: Math.random() * .3
+        // Build the portrait from exactly 100 real image pieces (10 x 10).
+        // Source dimensions mirror CSS object-fit: cover, so the assembled
+        // canvas matches the final photo without stretching.
+        var columns = 10;
+        var rows = 10;
+        var tileWidth = width / columns;
+        var tileHeight = height / rows;
+        var scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+        var sourceWidth = width / scale;
+        var sourceHeight = height / scale;
+        var sourceX = (image.naturalWidth - sourceWidth) / 2;
+        var sourceY = (image.naturalHeight - sourceHeight) / 2;
+        var pieces = [];
+        for (var row = 0; row < rows; row++) {
+          for (var column = 0; column < columns; column++) {
+            var targetX = column * tileWidth;
+            var targetY = row * tileHeight;
+            var side = Math.floor(Math.random() * 4);
+            var startX = side === 0 ? -tileWidth * 3 : side === 1 ? width + tileWidth * 3 : Math.random() * width;
+            var startY = side === 2 ? -tileHeight * 3 : side === 3 ? height + tileHeight * 3 : Math.random() * height;
+            pieces.push({
+              sourceX: sourceX + column * sourceWidth / columns,
+              sourceY: sourceY + row * sourceHeight / rows,
+              sourceWidth: sourceWidth / columns,
+              sourceHeight: sourceHeight / rows,
+              targetX: targetX,
+              targetY: targetY,
+              startX: startX,
+              startY: startY,
+              angle: (Math.random() - .5) * 1.5,
+              delay: Math.random() * .35
             });
           }
         }
         var started = performance.now();
-        var duration = 1650;
+        var duration = 1850;
         function frame(now) {
           var time = Math.min(1, (now - started) / duration);
           ctx.clearRect(0, 0, width, height);
-          dots.forEach(function (dot) {
-            var progress = Math.max(0, Math.min(1, (time - dot.delay) / (1 - dot.delay)));
+          pieces.forEach(function (piece) {
+            var progress = Math.max(0, Math.min(1, (time - piece.delay) / (1 - piece.delay)));
             var eased = 1 - Math.pow(1 - progress, 3);
-            ctx.globalAlpha = (.25 + progress * .75) * (1 - time * .22);
-            ctx.fillStyle = dot.color;
-            ctx.beginPath();
-            ctx.arc(dot.x + (dot.targetX - dot.x) * eased, dot.y + (dot.targetY - dot.y) * eased, dot.radius * (.8 + progress * .35), 0, Math.PI * 2);
-            ctx.fill();
+            var x = piece.startX + (piece.targetX - piece.startX) * eased;
+            var y = piece.startY + (piece.targetY - piece.startY) * eased;
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, progress * 1.9);
+            ctx.translate(x + tileWidth / 2, y + tileHeight / 2);
+            ctx.rotate(piece.angle * (1 - eased));
+            ctx.drawImage(image, piece.sourceX, piece.sourceY, piece.sourceWidth, piece.sourceHeight, -tileWidth / 2, -tileHeight / 2, tileWidth + .6, tileHeight + .6);
+            ctx.restore();
           });
-          ctx.globalAlpha = 1;
           if (time < 1) requestAnimationFrame(frame);
           else {
             card.classList.add('particle-ready');
@@ -281,7 +292,8 @@
       if (image.complete) animatePortrait();
       else image.addEventListener('load', animatePortrait, { once: true });
     }());
-    document.getElementById('contactForm').addEventListener('submit', function (event) {
+    var contactForm = document.getElementById('contactForm');
+    if (contactForm) contactForm.addEventListener('submit', function (event) {
       event.preventDefault();
       const note = document.getElementById('formNote');
       const name = document.getElementById('clientName').value.trim();
